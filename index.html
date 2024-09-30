@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluación de Proyectos</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-4 md:p-8">
+    <div class="max-w-2xl mx-auto bg-white p-4 md:p-6 rounded-lg shadow-lg">
+        <h2 class="text-xl md:text-2xl font-bold mb-4">Evaluación de Proyectos</h2>
+
+        <form id="evaluationForm" class="space-y-4">
+            <div class="mb-4">
+                <label for="name" class="block text-lg font-semibold">Nombre del Evaluador</label>
+                <input type="text" id="name" class="w-full p-2 border rounded" placeholder="Ingresa tu nombre">
+            </div>
+
+            <div id="questionContainer" class="space-y-4">
+                <!-- Los criterios aparecerán aquí dinámicamente -->
+            </div>
+
+            <div class="flex justify-between">
+                <button type="button" id="nextButton" class="bg-blue-500 text-white py-2 px-4 rounded mt-4" onclick="calcularPromedio()">Siguiente</button>
+                <button type="button" id="resetButton" class="bg-green-500 text-white py-2 px-4 rounded mt-4 hidden" onclick="resetForm()">Evaluar a otro</button>
+            </div>
+        </form>
+
+        <div class="result mt-4 font-semibold" id="resultadoPromedio"></div>
+    </div>
+
+    <script>
+        const totalQuestions = 17;
+        const criteria = ['Precisión en la Ejecución', 'Uso Correcto de Herramientas', 'Eficiencia', 'Organización', 'Interpretación de Instrucciones'];
+        let currentQuestion = 1;
+        let scores = {};
+        let name = '';
+
+        function getQuestionLabel() {
+            if (currentQuestion <= 5) {
+                return `P1Q${currentQuestion}`;
+            } else if (currentQuestion <= 11) {
+                return `P2Q${currentQuestion - 5}`;
+            } else {
+                return `P3Q${currentQuestion - 11}`;
+            }
+        }
+
+        function renderCriteria(questionLabel) {
+            let html = `<h3 class="text-lg md:text-xl font-semibold mb-2">Pregunta ${questionLabel}</h3>`;
+            criteria.forEach((criterio, index) => {
+                html += `
+                    <div class="mb-4">
+                        <h4 class="font-semibold">${criterio}</h4>
+                        <div class="flex space-x-2">
+                            <label class="flex items-center">
+                                <input type="radio" name="score${index}" value="1" class="mr-1"> 1
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="score${index}" value="2" class="mr-1"> 2
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="score${index}" value="3" class="mr-1"> 3
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="score${index}" value="4" class="mr-1"> 4
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="score${index}" value="5" class="mr-1"> 5
+                            </label>
+                        </div>
+                    </div>
+                `;
+            });
+            document.getElementById('questionContainer').innerHTML = html;
+        }
+
+        renderCriteria(getQuestionLabel());
+
+        function calcularPromedio() {
+            let totalPuntos = 0;
+            let totalCriterios = 0;
+            let completos = true;
+
+            criteria.forEach((criterio, index) => {
+                const radios = document.querySelector(`input[name="score${index}"]:checked`);
+                if (radios) {
+                    totalPuntos += parseInt(radios.value);
+                    totalCriterios++;
+                } else {
+                    completos = false;
+                }
+            });
+
+            if (completos && totalCriterios === criteria.length) {
+                const promedio = totalPuntos / totalCriterios;
+                const questionLabel = getQuestionLabel();
+                scores[questionLabel] = promedio.toFixed(2);
+
+                currentQuestion++;
+
+                if (currentQuestion > totalQuestions) {
+                    name = document.getElementById('name').value;
+                    if (name === '') {
+                        alert("Por favor ingresa el nombre del evaluador.");
+                        return;
+                    }
+
+                    scores['name'] = name;
+
+                    const totalPromedios = Object.keys(scores)
+                        .filter(key => key.startsWith('P'))
+                        .map(key => parseFloat(scores[key]))
+                        .reduce((a, b) => a + b, 0);
+
+                    const averageScore = ((totalPromedios / totalQuestions) * 2).toFixed(2);
+                    scores['TotalAverage'] = averageScore;
+
+                    document.getElementById("resultadoPromedio").innerText = `Promedio Total: ${averageScore}`;
+
+                    axios.post('https://sheet.best/api/sheets/0df42f18-1bb1-4684-86ce-fa43d5966b86', scores)
+                        .then(response => {
+                            console.log('Datos enviados a la API:', response.data);
+                        })
+                        .catch(error => {
+                            console.error('Error al enviar los datos:', error);
+                        });
+
+                    document.getElementById('nextButton').classList.add('hidden');
+                    document.getElementById('resetButton').classList.remove('hidden');
+                } else {
+                    renderCriteria(getQuestionLabel());
+                }
+
+            } else {
+                alert("Por favor selecciona un valor para cada criterio.");
+            }
+        }
+
+        function resetForm() {
+            currentQuestion = 1;
+            scores = {};
+            document.getElementById("evaluationForm").reset();
+            document.getElementById("resultadoPromedio").innerText = '';
+            document.getElementById('nextButton').classList.remove('hidden');
+            document.getElementById('resetButton').classList.add('hidden');
+
+            renderCriteria(getQuestionLabel());
+        }
+    </script>
+</body>
+</html>
