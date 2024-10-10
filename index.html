@@ -31,7 +31,7 @@
     </div>
 
     <script>
-        const totalQuestions = 17;
+        const totalQuestions = 35; // Ajustado a 35 preguntas
         const criteria = ['Precisión en la Ejecución', 'Uso Correcto de Herramientas', 'Eficiencia', 'Organización', 'Interpretación de Instrucciones'];
         let currentQuestion = 1;
         let scores = {};
@@ -42,8 +42,16 @@
                 return `P1Q${currentQuestion}`;
             } else if (currentQuestion <= 11) {
                 return `P2Q${currentQuestion - 5}`;
-            } else {
+            } else if (currentQuestion <= 17) {
                 return `P3Q${currentQuestion - 11}`;
+            } else if (currentQuestion <= 21) {
+                return `P4Q${currentQuestion - 17}`;
+            } else if (currentQuestion <= 25) {
+                return `P5Q${currentQuestion - 21}`;
+            } else if (currentQuestion <= 30) {
+                return `P6Q${currentQuestion - 25}`;
+            } else {
+                return `P7Q${currentQuestion - 30}`;
             }
         }
 
