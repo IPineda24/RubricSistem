@@ -31,7 +31,7 @@
     </div>
 
     <script>
-        const totalQuestions = 48; // Ajustado a 48 preguntas
+        const totalQuestions = 48; // Total de preguntas ajustado
         const criteria = ['Precisión en la Ejecución', 'Uso Correcto de Herramientas', 'Eficiencia', 'Organización', 'Interpretación de Instrucciones'];
         let currentQuestion = 1;
         let scores = {};
@@ -42,20 +42,20 @@
                 return `P1Q${currentQuestion}`;
             } else if (currentQuestion <= 11) {
                 return `P2Q${currentQuestion - 5}`;
-            } else if (currentQuestion <= 17) {
+            } else if (currentQuestion <= 16) {
                 return `P3Q${currentQuestion - 11}`;
-            } else if (currentQuestion <= 21) {
-                return `P4Q${currentQuestion - 17}`;
-            } else if (currentQuestion <= 25) {
-                return `P5Q${currentQuestion - 21}`;
-            } else if (currentQuestion <= 30) {
-                return `P6Q${currentQuestion - 25}`;
-            } else if (currentQuestion <= 34) {
-                return `P7Q${currentQuestion - 30}`;
-            } else if (currentQuestion <= 38) {
-                return `P8Q${currentQuestion - 34}`;
+            } else if (currentQuestion <= 22) {
+                return `P4Q${currentQuestion - 16}`;
+            } else if (currentQuestion <= 28) {
+                return `P5Q${currentQuestion - 22}`;
+            } else if (currentQuestion <= 35) {
+                return `P6Q${currentQuestion - 28}`;
+            } else if (currentQuestion <= 39) {
+                return `P7Q${currentQuestion - 35}`;
+            } else if (currentQuestion <= 43) {
+                return `P8Q${currentQuestion - 39}`;
             } else {
-                return `P9Q${currentQuestion - 38}`;
+                return `P9Q${currentQuestion - 43}`;
             }
         }
 
