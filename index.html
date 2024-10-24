@@ -31,7 +31,7 @@
     </div>
 
     <script>
-        const totalQuestions = 35; // Ajustado a 35 preguntas
+        const totalQuestions = 53; // Ajustado a 53 preguntas
         const criteria = ['Precisión en la Ejecución', 'Uso Correcto de Herramientas', 'Eficiencia', 'Organización', 'Interpretación de Instrucciones'];
         let currentQuestion = 1;
         let scores = {};
@@ -44,14 +44,18 @@
                 return `P2Q${currentQuestion - 5}`;
             } else if (currentQuestion <= 17) {
                 return `P3Q${currentQuestion - 11}`;
-            } else if (currentQuestion <= 21) {
+            } else if (currentQuestion <= 23) {
                 return `P4Q${currentQuestion - 17}`;
-            } else if (currentQuestion <= 25) {
-                return `P5Q${currentQuestion - 21}`;
-            } else if (currentQuestion <= 30) {
-                return `P6Q${currentQuestion - 25}`;
+            } else if (currentQuestion <= 29) {
+                return `P5Q${currentQuestion - 23}`;
+            } else if (currentQuestion <= 36) {
+                return `P6Q${currentQuestion - 29}`;
+            } else if (currentQuestion <= 40) {
+                return `P7Q${currentQuestion - 36}`;
+            } else if (currentQuestion <= 44) {
+                return `P8Q${currentQuestion - 40}`;
             } else {
-                return `P7Q${currentQuestion - 30}`;
+                return `P9Q${currentQuestion - 44}`;
             }
         }
 
@@ -127,7 +131,7 @@
 
                     document.getElementById("resultadoPromedio").innerText = `Promedio Total: ${averageScore}`;
 
-                    axios.post('https://sheet.best/api/sheets/0df42f18-1bb1-4684-86ce-fa43d5966b86', scores)
+                    axios.post('https://api.sheetbest.com/sheets/208a53c8-5ca4-4d09-9123-9569251c4410', scores)
                         .then(response => {
                             console.log('Datos enviados a la API:', response.data);
                         })
