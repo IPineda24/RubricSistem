@@ -18,7 +18,7 @@
             </div>
 
             <div id="questionContainer" class="space-y-4">
-                <!-- Los criterios aparecerán aquí dinámicamente -->
+                <!-- Preguntas dinámicas -->
             </div>
 
             <div class="flex justify-between">
@@ -31,7 +31,7 @@
     </div>
 
     <script>
-        const totalQuestions = 35; // Ajustado a 35 preguntas
+        const totalQuestions = 21; 
         const criteria = ['Precisión en la Ejecución', 'Uso Correcto de Herramientas', 'Eficiencia', 'Organización', 'Interpretación de Instrucciones'];
         let currentQuestion = 1;
         let scores = {};
@@ -44,14 +44,8 @@
                 return `P2Q${currentQuestion - 5}`;
             } else if (currentQuestion <= 17) {
                 return `P3Q${currentQuestion - 11}`;
-            } else if (currentQuestion <= 21) {
-                return `P4Q${currentQuestion - 17}`;
-            } else if (currentQuestion <= 25) {
-                return `P5Q${currentQuestion - 21}`;
-            } else if (currentQuestion <= 30) {
-                return `P6Q${currentQuestion - 25}`;
             } else {
-                return `P7Q${currentQuestion - 30}`;
+                return `P4Q${currentQuestion - 17}`;
             }
         }
 
@@ -63,19 +57,19 @@
                         <h4 class="font-semibold">${criterio}</h4>
                         <div class="flex space-x-2">
                             <label class="flex items-center">
-                                <input type="radio" name="score${index}" value="1" class="mr-1"> 1
+                                <input type="radio" name="score${index}" value="1"> 1
                             </label>
                             <label class="flex items-center">
-                                <input type="radio" name="score${index}" value="2" class="mr-1"> 2
+                                <input type="radio" name="score${index}" value="2"> 2
                             </label>
                             <label class="flex items-center">
-                                <input type="radio" name="score${index}" value="3" class="mr-1"> 3
+                                <input type="radio" name="score${index}" value="3"> 3
                             </label>
                             <label class="flex items-center">
-                                <input type="radio" name="score${index}" value="4" class="mr-1"> 4
+                                <input type="radio" name="score${index}" value="4"> 4
                             </label>
                             <label class="flex items-center">
-                                <input type="radio" name="score${index}" value="5" class="mr-1"> 5
+                                <input type="radio" name="score${index}" value="5" checked> 5
                             </label>
                         </div>
                     </div>
@@ -89,60 +83,53 @@
         function calcularPromedio() {
             let totalPuntos = 0;
             let totalCriterios = 0;
-            let completos = true;
 
             criteria.forEach((criterio, index) => {
                 const radios = document.querySelector(`input[name="score${index}"]:checked`);
                 if (radios) {
                     totalPuntos += parseInt(radios.value);
                     totalCriterios++;
-                } else {
-                    completos = false;
                 }
             });
 
-            if (completos && totalCriterios === criteria.length) {
-                const promedio = totalPuntos / totalCriterios;
-                const questionLabel = getQuestionLabel();
-                scores[questionLabel] = promedio.toFixed(2);
+            const promedio = totalPuntos / totalCriterios;
+            const questionLabel = getQuestionLabel();
+            scores[questionLabel] = promedio.toFixed(2);
 
-                currentQuestion++;
+            currentQuestion++;
 
-                if (currentQuestion > totalQuestions) {
-                    name = document.getElementById('name').value;
-                    if (name === '') {
-                        alert("Por favor ingresa el nombre del evaluador.");
-                        return;
-                    }
-
-                    scores['name'] = name;
-
-                    const totalPromedios = Object.keys(scores)
-                        .filter(key => key.startsWith('P'))
-                        .map(key => parseFloat(scores[key]))
-                        .reduce((a, b) => a + b, 0);
-
-                    const averageScore = ((totalPromedios / totalQuestions) * 2).toFixed(2);
-                    scores['TotalAverage'] = averageScore;
-
-                    document.getElementById("resultadoPromedio").innerText = `Promedio Total: ${averageScore}`;
-
-                    axios.post('https://sheet.best/api/sheets/0df42f18-1bb1-4684-86ce-fa43d5966b86', scores)
-                        .then(response => {
-                            console.log('Datos enviados a la API:', response.data);
-                        })
-                        .catch(error => {
-                            console.error('Error al enviar los datos:', error);
-                        });
-
-                    document.getElementById('nextButton').classList.add('hidden');
-                    document.getElementById('resetButton').classList.remove('hidden');
-                } else {
-                    renderCriteria(getQuestionLabel());
+            if (currentQuestion > totalQuestions) {
+                name = document.getElementById('name').value;
+                if (name === '') {
+                    alert("Por favor ingresa el nombre del evaluador.");
+                    return;
                 }
 
+                scores['name'] = name;
+
+                const totalPromedios = Object.keys(scores)
+                    .filter(key => key.startsWith('P'))
+                    .map(key => parseFloat(scores[key]))
+                    .reduce((a, b) => a + b, 0);
+
+                // ✅ promedio sobre 5, escalar a 10
+                const averageScore = ((totalPromedios / totalQuestions) * 2).toFixed(2);
+                scores['TotalAverage'] = averageScore;
+
+                document.getElementById("resultadoPromedio").innerText = `Promedio Total: ${averageScore} / 10`;
+
+                axios.post('https://sheetdb.io/api/v1/a39ankm27gxcj', scores)
+                    .then(response => {
+                        console.log('Datos enviados a la API:', response.data);
+                    })
+                    .catch(error => {
+                        console.error('Error al enviar los datos:', error);
+                    });
+
+                document.getElementById('nextButton').classList.add('hidden');
+                document.getElementById('resetButton').classList.remove('hidden');
             } else {
-                alert("Por favor selecciona un valor para cada criterio.");
+                renderCriteria(getQuestionLabel());
             }
         }
 
