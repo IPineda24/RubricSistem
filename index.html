@@ -1,148 +1,176 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Evaluación de Proyectos</title>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Evaluación de Proyectos</title>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 p-4 md:p-8">
-    <div class="max-w-2xl mx-auto bg-white p-4 md:p-6 rounded-lg shadow-lg">
-        <h2 class="text-xl md:text-2xl font-bold mb-4">Evaluación de Proyectos</h2>
+  <div class="max-w-2xl mx-auto bg-white p-4 md:p-6 rounded-lg shadow-lg">
+    <h2 class="text-xl md:text-2xl font-bold mb-4">Evaluación de Proyectos</h2>
 
-        <form id="evaluationForm" class="space-y-4">
-            <div class="mb-4">
-                <label for="name" class="block text-lg font-semibold">Nombre del Evaluador</label>
-                <input type="text" id="name" class="w-full p-2 border rounded" placeholder="Ingresa tu nombre">
+    <form id="evaluationForm" class="space-y-4">
+      <div class="mb-4">
+        <label for="name" class="block text-lg font-semibold">Nombre del Evaluador</label>
+        <input type="text" id="name" class="w-full p-2 border rounded" placeholder="Ingresa tu nombre">
+      </div>
+
+      <div id="questionContainer" class="space-y-4"></div>
+
+      <div class="flex justify-between">
+        <button type="button" id="nextButton" class="bg-blue-500 text-white py-2 px-4 rounded mt-4" onclick="calcularPromedio()">Siguiente</button>
+        <button type="button" id="resetButton" class="bg-green-500 text-white py-2 px-4 rounded mt-4 hidden" onclick="resetForm()">Evaluar a otro</button>
+      </div>
+    </form>
+
+    <div class="result mt-4 font-semibold" id="resultadoPromedio"></div>
+  </div>
+
+  <script>
+    // Orden exacto de columnas que nos diste
+    const questionLabels = [
+      "P4Q1","P4Q2","P4Q3","P4Q4",
+      "P2Q1","P2Q2","P2Q3","P2Q4","P2Q5","P2Q6",
+      "P6Q1","P6Q2","P6Q3","P6Q4","P6Q5",
+      "P3Q1","P3Q2","P3Q3","P3Q4","P3Q5","P3Q6",
+      "P1Q1","P1Q2","P1Q3","P1Q4","P1Q5",
+      "P5Q1","P5Q2","P5Q3","P5Q4",
+      "P7Q1","P7Q2","P7Q3","P7Q4","P7Q5"
+    ];
+
+    const criteria = [
+      'Precisión en la Ejecución',
+      'Uso Correcto de Herramientas',
+      'Eficiencia',
+      'Organización',
+      'Interpretación de Instrucciones'
+    ];
+
+    const API_URL = 'https://sheetdb.io/api/v1/a39ankm27gxcj'; // tu endpoint
+    let currentQuestionIndex = 0;
+    let scores = {};
+    let name = '';
+
+    function renderCriteria(questionLabel) {
+      let html = `<h3 class="text-lg md:text-xl font-semibold mb-2">Pregunta ${questionLabel}</h3>`;
+      criteria.forEach((criterio, index) => {
+        html += `
+          <div class="mb-4">
+            <h4 class="font-semibold">${criterio}</h4>
+            <div class="flex space-x-2">
+              <label class="flex items-center"><input type="radio" name="score${index}" value="1"> 1</label>
+              <label class="flex items-center"><input type="radio" name="score${index}" value="2"> 2</label>
+              <label class="flex items-center"><input type="radio" name="score${index}" value="3"> 3</label>
+              <label class="flex items-center"><input type="radio" name="score${index}" value="4"> 4</label>
+              <label class="flex items-center"><input type="radio" name="score${index}" value="5" checked> 5</label>
             </div>
+          </div>
+        `;
+      });
+      document.getElementById('questionContainer').innerHTML = html;
+    }
 
-            <div id="questionContainer" class="space-y-4">
-                <!-- Preguntas dinámicas -->
-            </div>
+    renderCriteria(questionLabels[currentQuestionIndex]);
 
-            <div class="flex justify-between">
-                <button type="button" id="nextButton" class="bg-blue-500 text-white py-2 px-4 rounded mt-4" onclick="calcularPromedio()">Siguiente</button>
-                <button type="button" id="resetButton" class="bg-green-500 text-white py-2 px-4 rounded mt-4 hidden" onclick="resetForm()">Evaluar a otro</button>
-            </div>
-        </form>
+    async function calcularPromedio() {
+      let totalPuntos = 0;
+      let totalCriterios = 0;
 
-        <div class="result mt-4 font-semibold" id="resultadoPromedio"></div>
-    </div>
+      criteria.forEach((criterio, index) => {
+        const radios = document.querySelector(`input[name="score${index}"]:checked`);
+        if (radios) {
+          totalPuntos += parseInt(radios.value, 10);
+          totalCriterios++;
+        }
+      });
 
-    <script>
-        const totalQuestions = 21; 
-        const criteria = ['Precisión en la Ejecución', 'Uso Correcto de Herramientas', 'Eficiencia', 'Organización', 'Interpretación de Instrucciones'];
-        let currentQuestion = 1;
-        let scores = {};
-        let name = '';
+      const promedio = totalPuntos / totalCriterios;
+      const questionLabel = questionLabels[currentQuestionIndex];
+      // Guardamos como string para mostrar, pero luego convertimos a número al enviar
+      scores[questionLabel] = promedio.toFixed(2);
 
-        function getQuestionLabel() {
-            if (currentQuestion <= 5) {
-                return `P1Q${currentQuestion}`;
-            } else if (currentQuestion <= 11) {
-                return `P2Q${currentQuestion - 5}`;
-            } else if (currentQuestion <= 17) {
-                return `P3Q${currentQuestion - 11}`;
-            } else {
-                return `P4Q${currentQuestion - 17}`;
-            }
+      currentQuestionIndex++;
+
+      if (currentQuestionIndex >= questionLabels.length) {
+        name = document.getElementById('name').value.trim();
+        if (name === '') {
+          alert("Por favor ingresa el nombre del evaluador.");
+          currentQuestionIndex--; // mantener en la última pregunta si canceló
+          return;
         }
 
-        function renderCriteria(questionLabel) {
-            let html = `<h3 class="text-lg md:text-xl font-semibold mb-2">Pregunta ${questionLabel}</h3>`;
-            criteria.forEach((criterio, index) => {
-                html += `
-                    <div class="mb-4">
-                        <h4 class="font-semibold">${criterio}</h4>
-                        <div class="flex space-x-2">
-                            <label class="flex items-center">
-                                <input type="radio" name="score${index}" value="1"> 1
-                            </label>
-                            <label class="flex items-center">
-                                <input type="radio" name="score${index}" value="2"> 2
-                            </label>
-                            <label class="flex items-center">
-                                <input type="radio" name="score${index}" value="3"> 3
-                            </label>
-                            <label class="flex items-center">
-                                <input type="radio" name="score${index}" value="4"> 4
-                            </label>
-                            <label class="flex items-center">
-                                <input type="radio" name="score${index}" value="5" checked> 5
-                            </label>
-                        </div>
-                    </div>
-                `;
-            });
-            document.getElementById('questionContainer').innerHTML = html;
+        scores['name'] = name;
+
+        const totalPromedios = questionLabels
+          .map(key => parseFloat(scores[key]) || 0)
+          .reduce((a, b) => a + b, 0);
+
+        // promedio sobre 5, escalar a 10
+        const averageScore = ((totalPromedios / questionLabels.length) * 2);
+        const averageScoreRounded = parseFloat(averageScore.toFixed(2));
+
+        // PREPARAMOS la fila exacta que vamos a enviar (convertimos a número)
+        const row = {};
+
+        // Añadimos cada pregunta en formato numérico
+        questionLabels.forEach(k => {
+          row[k] = parseFloat(scores[k]) || 0;
+        });
+
+        // Nombre del evaluador
+        row['name'] = name;
+
+        // Rellenamos variantes del campo promedio/total para cubrir diferentes nombres de columna:
+        // (la hoja puede tener "Total Average" o "Average" o "TotalAverage" etc.)
+        row['Total'] = parseFloat(totalPromedios.toFixed(2));            // suma de promedios (opcional)
+        row['Average'] = averageScoreRounded;                            // Average
+        row['Total Average'] = averageScoreRounded;                      // "Total Average" con espacio (si tu hoja usa ese encabezado)
+        row['TotalAverage'] = averageScoreRounded;                       // otra posibilidad
+
+        // Log para depuración: revisa en consola qué vas a enviar
+        const payload = { data: [row] };
+        console.log('Payload a enviar a SheetDB:', payload);
+
+        document.getElementById("resultadoPromedio").innerText = `Promedio Total: ${averageScoreRounded} / 10`;
+
+        // Envío correcto según docs: { data: [ { col1: val1, ... } ] }
+        try {
+          const response = await axios.post(API_URL, payload, {
+            headers: { 'Content-Type': 'application/json' }
+          });
+          console.log('Respuesta de la API:', response.data);
+          // Mostrar confirmación al usuario si quieres
+        } catch (error) {
+          console.error('Error al enviar los datos:', error);
+          if (error.response) {
+            console.error('Status:', error.response.status);
+            console.error('Body:', error.response.data);
+            alert('Error al enviar datos a la API. Mira la consola para más detalles.');
+          } else {
+            alert('Error de red al enviar datos. Revisa la consola.');
+          }
         }
 
-        renderCriteria(getQuestionLabel());
+        document.getElementById('nextButton').classList.add('hidden');
+        document.getElementById('resetButton').classList.remove('hidden');
 
-        function calcularPromedio() {
-            let totalPuntos = 0;
-            let totalCriterios = 0;
+      } else {
+        renderCriteria(questionLabels[currentQuestionIndex]);
+      }
+    }
 
-            criteria.forEach((criterio, index) => {
-                const radios = document.querySelector(`input[name="score${index}"]:checked`);
-                if (radios) {
-                    totalPuntos += parseInt(radios.value);
-                    totalCriterios++;
-                }
-            });
+    function resetForm() {
+      currentQuestionIndex = 0;
+      scores = {};
+      document.getElementById("evaluationForm").reset();
+      document.getElementById("resultadoPromedio").innerText = '';
+      document.getElementById('nextButton').classList.remove('hidden');
+      document.getElementById('resetButton').classList.add('hidden');
 
-            const promedio = totalPuntos / totalCriterios;
-            const questionLabel = getQuestionLabel();
-            scores[questionLabel] = promedio.toFixed(2);
-
-            currentQuestion++;
-
-            if (currentQuestion > totalQuestions) {
-                name = document.getElementById('name').value;
-                if (name === '') {
-                    alert("Por favor ingresa el nombre del evaluador.");
-                    return;
-                }
-
-                scores['name'] = name;
-
-                const totalPromedios = Object.keys(scores)
-                    .filter(key => key.startsWith('P'))
-                    .map(key => parseFloat(scores[key]))
-                    .reduce((a, b) => a + b, 0);
-
-                // ✅ promedio sobre 5, escalar a 10
-                const averageScore = ((totalPromedios / totalQuestions) * 2).toFixed(2);
-                scores['TotalAverage'] = averageScore;
-
-                document.getElementById("resultadoPromedio").innerText = `Promedio Total: ${averageScore} / 10`;
-
-                axios.post('https://sheetdb.io/api/v1/a39ankm27gxcj', scores)
-                    .then(response => {
-                        console.log('Datos enviados a la API:', response.data);
-                    })
-                    .catch(error => {
-                        console.error('Error al enviar los datos:', error);
-                    });
-
-                document.getElementById('nextButton').classList.add('hidden');
-                document.getElementById('resetButton').classList.remove('hidden');
-            } else {
-                renderCriteria(getQuestionLabel());
-            }
-        }
-
-        function resetForm() {
-            currentQuestion = 1;
-            scores = {};
-            document.getElementById("evaluationForm").reset();
-            document.getElementById("resultadoPromedio").innerText = '';
-            document.getElementById('nextButton').classList.remove('hidden');
-            document.getElementById('resetButton').classList.add('hidden');
-
-            renderCriteria(getQuestionLabel());
-        }
-    </script>
+      renderCriteria(questionLabels[currentQuestionIndex]);
+    }
+  </script>
 </body>
 </html>
